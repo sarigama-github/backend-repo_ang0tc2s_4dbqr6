@@ -1,8 +1,13 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Dict
 
-app = FastAPI()
+from database import create_document
+from schemas import Contact
+
+app = FastAPI(title="Muhammed Ziyan - Personal Branding API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,6 +68,15 @@ def test_database():
     response["database_name"] = "✅ Set" if os.getenv("DATABASE_NAME") else "❌ Not Set"
     
     return response
+
+# Contact endpoint to collect messages from the site
+@app.post("/api/contact")
+def create_contact(contact: Contact) -> Dict[str, str]:
+    try:
+        contact_id = create_document("contact", contact)
+        return {"status": "ok", "id": contact_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
